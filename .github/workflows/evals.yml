@@ -1,0 +1,38 @@
+name: evals
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Testes unitários
+        run: pytest -q
+      - name: Suite de eval + gate de regressão
+        run: llm-evals run --cases cases/basico.jsonl --fixtures evals/fixtures/bom.json --min-pass-rate 0.8
+      - name: Relatório no resumo do job
+        if: always()
+        run: |
+          python - <<'EOF' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          r = json.load(open("results/report.json"))
+          print(f"### Eval: {r['passed']}/{r['total']} ({r['pass_rate']:.0%})\n")
+          print("| caso | resultado | latência (ms) |\n|---|---|---|")
+          for x in r["results"]:
+              s = "✅" if x["passed"] else f"❌ {', '.join(x['failed_checks'])}"
+              print(f"| {x['id']} | {s} | {x['latency_ms']} |")
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-report
+          path: results/report.json
