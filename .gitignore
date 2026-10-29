@@ -7,3 +7,6 @@ venv/
 .DS_Store
 data/*.bin
 .ragas_cache/
+*.egg-info/
+build/
+results/
