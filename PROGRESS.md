@@ -2,6 +2,7 @@
 
 Último ponto onde parei (atualize ao fim de cada sessão de 1h):
 
-- **Data:** 2026-10-29
-- **Onde parei:** esqueleto pronto — loader JSONL, 6 scorers, provider `fixture`, gate de regressão vs baseline, CLI e workflow do GitHub Actions. 18 testes passando; demo de regressão (fixture `regressao.json`) derruba o gate com exit 1.
-- **Próximo passo:** adicionar provider real (barato, com teto de custo) e medir latência/custo por caso; depois um check LLM-as-judge.
+- **Data:** 2026-11-05 (bloco de QUINTA, feito pelo Hermes a pedido do Lucas)
+- **Onde parei:** provider `anthropic` pronto (só stdlib, `claude-haiku-5-5`) com **teto de custo duro**: pré-checa o pior caso (entrada em limite superior + `max_tokens`) antes de cada chamada/retry, cobra o pior caso em falha ambígua (timeout), retry só em 429/5xx, thinking desligado, execução incompleta reprova o gate e não grava baseline. Relatório com tokens, custo e latência por caso (+ custo total, p50/p95). 45 testes contra servidor HTTP falso (também passam sem internet); 18 mutantes, **1ª rodada 17/18** (o que sobreviveu virou teste). CI continua com `fixture` (grátis).
+- **O que NÃO foi feito:** nenhuma chamada real à API (o ok de gasto não veio). Logo, **sem latência/custo reais** ainda. Pior caso estimado para os 5 casos: US$ 0,000679.
+- **Próximo passo:** (1) rodar os 5 casos de verdade com `--max-cost-usd 0.002` (precisa do ok do Lucas), gravar `evals/baseline-anthropic.json` e colocar latência/custo no README; (2) mais casos (5 é pouco para p95 e para o baseline); (3) check LLM-as-judge; (4) o push de `.github/workflows/*` está bloqueado até `gh auth refresh -h github.com -s workflow`.
