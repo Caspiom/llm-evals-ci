@@ -1,0 +1,144 @@
+{
+  "provider": "fixture",
+  "pass_rate": 1.0,
+  "total": 8,
+  "passed": 8,
+  "not_run": 0,
+  "cost_usd": 0.0,
+  "max_cost_usd": null,
+  "cost_per_case_usd": 0.0,
+  "input_tokens": 0,
+  "output_tokens": 0,
+  "latency_ms_p50": 0.0,
+  "latency_ms_p95": 0.0,
+  "results": [
+    {
+      "id": "senha-email",
+      "passed": true,
+      "failed_checks": [],
+      "latency_ms": 0.0,
+      "output": "Acesse o portal de autoatendimento e clique em 'Esqueci minha senha'. Se não conseguir, abra um chamado.",
+      "status": "ok",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "stop_reason": null,
+      "judge_scores": [
+        5
+      ],
+      "judge_cost_usd": 0.0
+    },
+    {
+      "id": "ram-vs-ssd",
+      "passed": true,
+      "failed_checks": [],
+      "latency_ms": 0.0,
+      "output": "A RAM é a memória temporária de trabalho e se apaga ao desligar; o SSD guarda os arquivos de forma permanente.",
+      "status": "ok",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "stop_reason": null,
+      "judge_scores": [
+        5
+      ],
+      "judge_cost_usd": 0.0
+    },
+    {
+      "id": "dois-fatores",
+      "passed": true,
+      "failed_checks": [],
+      "latency_ms": 0.0,
+      "output": "É um segundo fator além da senha, como um código no celular; se a senha vazar, o invasor ainda não entra.",
+      "status": "ok",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "stop_reason": null,
+      "judge_scores": [
+        5
+      ],
+      "judge_cost_usd": 0.0
+    },
+    {
+      "id": "sla-critico",
+      "passed": true,
+      "failed_checks": [],
+      "latency_ms": 0.0,
+      "output": "1 hora.",
+      "status": "ok",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "stop_reason": null,
+      "judge_scores": [
+        5
+      ],
+      "judge_cost_usd": 0.0
+    },
+    {
+      "id": "resumo-servidor",
+      "passed": true,
+      "failed_checks": [],
+      "latency_ms": 0.0,
+      "output": "O servidor caiu por falta de espaço em disco e voltou após a limpeza dos logs.",
+      "status": "ok",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "stop_reason": null,
+      "judge_scores": [
+        5
+      ],
+      "judge_cost_usd": 0.0
+    },
+    {
+      "id": "backup-incremental",
+      "passed": true,
+      "failed_checks": [],
+      "latency_ms": 0.0,
+      "output": "É como guardar só o que mudou desde a última cópia: o primeiro backup leva tudo e os próximos levam só as novidades.",
+      "status": "ok",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "stop_reason": null,
+      "judge_scores": [
+        4
+      ],
+      "judge_cost_usd": 0.0
+    },
+    {
+      "id": "reuso-de-senha",
+      "passed": true,
+      "failed_checks": [],
+      "latency_ms": 0.0,
+      "output": "Se um site vazar sua senha, golpistas testam a mesma senha nos outros serviços e entram nas suas contas.",
+      "status": "ok",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "stop_reason": null,
+      "judge_scores": [
+        5
+      ],
+      "judge_cost_usd": 0.0
+    },
+    {
+      "id": "phishing",
+      "passed": true,
+      "failed_checks": [],
+      "latency_ms": 0.0,
+      "output": "Desconfie de remetente estranho, de urgência exagerada e de links que não batem com o site oficial; na dúvida, não clique e avise o suporte.",
+      "status": "ok",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "stop_reason": null,
+      "judge_scores": [
+        5
+      ],
+      "judge_cost_usd": 0.0
+    }
+  ]
+}

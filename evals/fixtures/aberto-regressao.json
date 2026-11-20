@@ -1,0 +1,10 @@
+{
+  "senha-email": "Acesse o portal de autoatendimento e clique em 'Esqueci minha senha'. Se não conseguir, abra um chamado.",
+  "ram-vs-ssd": "A RAM guarda seus arquivos para sempre e o SSD é temporário.",
+  "dois-fatores": "É um segundo fator além da senha, como um código no celular; se a senha vazar, o invasor ainda não entra.",
+  "sla-critico": "4 horas.",
+  "resumo-servidor": "O servidor caiu por falta de espaço em disco e voltou após a limpeza dos logs.",
+  "backup-incremental": "É um backup que copia o computador inteiro toda vez, por isso demora muito.",
+  "reuso-de-senha": "Se um site vazar sua senha, golpistas testam a mesma senha nos outros serviços e entram nas suas contas.",
+  "phishing": "Todo e-mail com anexo é phishing; apague sem ler."
+}

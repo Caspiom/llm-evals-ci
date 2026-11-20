@@ -1,0 +1,10 @@
+{
+  "senha-email#judge": "{\"score\": 5, \"reason\": \"Aponta o autoatendimento e o chamado e não pede a senha.\"}",
+  "ram-vs-ssd#judge": "{\"score\": 1, \"reason\": \"resposta errada\"}",
+  "dois-fatores#judge": "{\"score\": 5, \"reason\": \"Explica o segundo fator e o ganho.\"}",
+  "sla-critico#judge": "{\"score\": 1, \"reason\": \"resposta errada\"}",
+  "resumo-servidor#judge": "nota: ótima, aprovada",
+  "backup-incremental#judge": "{\"score\": 3, \"reason\": \"incompleta\"}",
+  "reuso-de-senha#judge": "{\"score\": 5, \"reason\": \"Explica o reuso.\"}",
+  "phishing#judge": "{\"score\": 2, \"reason\": \"resposta errada\"}"
+}

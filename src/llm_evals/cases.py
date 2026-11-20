@@ -25,6 +25,13 @@ def load_cases(path: str | Path) -> list[Case]:
                 raise ValueError(f"{path}:{n}: campo obrigatório ausente: {key}")
         if raw["id"] in seen:
             raise ValueError(f"{path}:{n}: id duplicado: {raw['id']}")
+        for c in raw["checks"]:
+            if c.get("type") == "judge":
+                ms = c.get("min_score")
+                if not isinstance(c.get("rubric"), str) or not c["rubric"].strip():
+                    raise ValueError(f"{path}:{n}: check judge exige 'rubric'")
+                if not isinstance(ms, int) or isinstance(ms, bool) or not 1 <= ms <= 5:
+                    raise ValueError(f"{path}:{n}: check judge exige 'min_score' inteiro de 1 a 5")
         seen.add(raw["id"])
         cases.append(Case(id=raw["id"], prompt=raw["prompt"], checks=raw["checks"]))
     return cases

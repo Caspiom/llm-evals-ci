@@ -19,6 +19,16 @@ jobs:
         run: pytest -q
       - name: Suite de eval + gate de regressão
         run: llm-evals run --cases cases/basico.jsonl --fixtures evals/fixtures/bom.json --min-pass-rate 0.8
+      - name: Suíte de robustez (gate abre no bom)
+        run: llm-evals run --cases cases/robustez.jsonl --fixtures evals/fixtures/robustez-bom.json --baseline evals/baseline-robustez.json --out results/robustez.json
+      - name: Suíte aberta com juiz fixture (gate abre no bom)
+        run: llm-evals run --cases cases/aberto.jsonl --fixtures evals/fixtures/aberto-bom.json --judge fixture --judge-fixtures evals/fixtures/aberto-juiz-bom.json --baseline evals/baseline-aberto.json --out results/aberto.json
+      - name: Gate fecha na regressão (se abrir, o gate está quebrado)
+        run: |
+          ! llm-evals run --cases cases/robustez.jsonl --fixtures evals/fixtures/robustez-regressao.json --baseline evals/baseline-robustez.json --out results/robustez-regr.json
+          ! llm-evals run --cases cases/aberto.jsonl --fixtures evals/fixtures/aberto-regressao.json --judge fixture --judge-fixtures evals/fixtures/aberto-juiz-regressao.json --baseline evals/baseline-aberto.json --out results/aberto-regr.json
+      - name: Calibração do juiz-base (grátis)
+        run: python scripts/calibrar_juiz.py --judge keyword
       - name: Relatório no resumo do job
         if: always()
         run: |

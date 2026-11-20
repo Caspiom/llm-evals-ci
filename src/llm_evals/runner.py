@@ -8,8 +8,11 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from .cases import Case
+from .judge import Judge
 from .providers import BudgetExceeded, Provider, ProviderError
 from .scorers import run_check
+
+JUDGE_INVALID, JUDGE_ERROR = "judge_invalid", "judge_error"
 
 OK, SKIPPED_BUDGET, ERROR = "ok", "skipped_budget", "error"
 
@@ -26,6 +29,8 @@ class CaseResult:
     output_tokens: int = 0
     cost_usd: float = 0.0
     stop_reason: str | None = None
+    judge_scores: list[int] | None = None  # nota de cada check judge (None = veredito invalido)
+    judge_cost_usd: float = 0.0
 
 
 def _percentile(values: list[float], p: float) -> float:
@@ -71,7 +76,19 @@ class Report:
         }
 
 
-def run(cases: list[Case], provider: Provider) -> Report:
+def _usage_extra(provider) -> dict:
+    usage = getattr(provider, "last_usage", None)
+    return (
+        dict(input_tokens=usage.input_tokens, output_tokens=usage.output_tokens,
+             cost_usd=usage.cost_usd, stop_reason=usage.stop_reason)
+        if usage else {}
+    )
+
+
+def run(cases: list[Case], provider: Provider, judge: Judge | None = None) -> Report:
+    needs_judge = [c.id for c in cases if any(k.get("type") == "judge" for k in c.checks)]
+    if needs_judge and judge is None:  # sem juiz, o check nao pode "passar por omissao"
+        raise ValueError("casos com check 'judge' (" + ", ".join(needs_judge[:3]) + ") exigem um juiz")
     results: list[CaseResult] = []
     budget_out = False
     for case in cases:
@@ -90,14 +107,40 @@ def run(cases: list[Case], provider: Provider) -> Report:
             results.append(CaseResult(case.id, False, [ERROR], round(latency, 2), str(e), ERROR))
             continue
         latency = (time.perf_counter() - t0) * 1000
-        failed = [c["type"] for c in case.checks if not run_check(output, c)]
-        usage = getattr(provider, "last_usage", None)
-        extra = (
-            dict(input_tokens=usage.input_tokens, output_tokens=usage.output_tokens,
-                 cost_usd=usage.cost_usd, stop_reason=usage.stop_reason)
-            if usage else {}
-        )
-        results.append(CaseResult(case.id, not failed, failed, round(latency, 2), output, **extra))
+        extra = _usage_extra(provider)
+        failed: list[str] = []
+        scores: list[int] = []
+        judge_cost, judge_stop = 0.0, False
+        for c in case.checks:
+            if c["type"] != "judge":
+                if not run_check(output, c):
+                    failed.append(c["type"])
+                continue
+            try:
+                verdict = judge.grade(case.id, case.prompt, output, c["rubric"])
+            except BudgetExceeded:
+                judge_stop = True  # o juiz estourou o teto dele: este caso e o resto ficam sem veredito
+                failed.append(SKIPPED_BUDGET)
+                break
+            except ProviderError:
+                failed.append(JUDGE_ERROR)
+                continue
+            ju = judge.last_usage
+            judge_cost += ju.cost_usd if ju else 0.0
+            scores.append(verdict.score)
+            if verdict.score is None:
+                failed.append(JUDGE_INVALID)
+            elif verdict.score < c["min_score"]:
+                failed.append("judge")
+        if judge_cost:
+            extra["cost_usd"] = extra.get("cost_usd", 0.0) + judge_cost
+        if judge_stop:
+            budget_out = True
+            results.append(CaseResult(case.id, False, failed, round(latency, 2), output, SKIPPED_BUDGET,
+                                      **extra, judge_scores=scores or None, judge_cost_usd=judge_cost))
+            continue
+        results.append(CaseResult(case.id, not failed, failed, round(latency, 2), output, **extra,
+                                  judge_scores=scores or None, judge_cost_usd=judge_cost))
     return Report(provider.name, results, getattr(provider, "max_cost_usd", None))
 
 

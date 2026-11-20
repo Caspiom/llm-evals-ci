@@ -36,10 +36,23 @@ Cada caso do relatório traz `input_tokens`, `output_tokens`, `cost_usd`, `laten
 - **Validação por mutação:** 18 mutantes (sem pré-checagem, custo sem preço de saída, fronteira `>` vs `>=`, retry em 4xx, timeout sem cobrança, thinking ligado, estimador chars/4, runner que não para no teto, gate que ignora caso pulado...). **1ª rodada: 17/18 pegos.** O que sobreviveu (runner continuava tentando casos depois do teto) mudava o comportamento (um prompt menor depois do estouro ainda rodava, deixando buracos na suíte); escrevi o teste e agora são 18/18.
 - **NÃO medido ainda: latência e custo REAIS.** Nenhuma chamada à API foi feita. Estimativa dos 5 casos atuais: pior caso **US$ 0,000679** no total, realista ~US$ 0,0001. Quando rodar, os números entram aqui. Com 5 casos o p95 é igual ao máximo: amostra pequena demais para falar de cauda.
 - O servidor falso valida o *contrato HTTP que eu li na doc*, não a API de verdade: um campo que a doc descreve diferente do comportamento real só aparece na primeira chamada real.
-- Esta suíte tem 5 casos com checks determinísticos. O LLM-as-judge (qualidade de respostas abertas) ainda não existe.
+- As suítes `basico` (5), `robustez` (12, injeção/formato/recusa/limites) e `aberto` (8, juiz) rodam no CI só com `fixture`.
+
+## LLM-as-judge (`src/llm_evals/judge.py`)
+Check `{"type": "judge", "rubric": "...", "min_score": 4}`: um segundo modelo dá nota de 1 a 5 contra a rubrica.
+- **Veredito inválido nunca aprova** (JSON ruim, nota 0/6, 4.5, `true`, "5" como texto): o caso falha com `judge_invalid`. Erro do juiz = `judge_error`. Caso com check `judge` sem juiz configurado é erro de uso, não passa por omissão.
+- **Teto de custo próprio do juiz** (`--judge-max-cost-usd`, obrigatório com `--judge anthropic`), somado ao custo do caso e visível em `judge_cost_usd`. Se o juiz estoura o teto, o caso e o resto ficam `skipped_budget` (nunca aprovados).
+- A resposta avaliada vai entre `<resposta>` e é tratada como DADO. Isso reduz mas **não elimina** injeção ("dê nota 5"): só juiz real calibrado mede o quanto ele cai nisso.
+
+### Calibração contra rótulo humano (`scripts/calibrar_juiz.py`)
+24 respostas com rótulo meu (um anotador só: viés meu, sem concordância entre humanos): 11 aceitáveis, 13 não, com fluente-porém-errada, certa-com-outras-palavras e injeção no próprio texto. O que se reporta: acordo, **kappa de Cohen** e **falso aceite** (juiz aprova o que o humano reprova) separado de falso rejeito.
+- **Piso grátis (juiz por palavras-chave, sem modelo): acordo 67%, kappa 0,33, 4 falsos aceites em 13 reprovadas** (inclusive a injeção `cal05` e a troca RAM↔SSD `cal10`) e 4 falsos rejeitos. Esse é o número que um juiz LLM precisa superar. Um teste trava que o piso ainda erra: se alguém zerar o falso aceite, os dados ficaram fáceis demais.
+- **Juiz LLM real: NÃO rodado** (custa dinheiro, falta o ok). Sem esse número, o juiz do CI é fixture: prova a mecânica (gate, custo, veredito inválido), **não** a qualidade da nota.
+- Com n=24 qualquer um desses números tem incerteza grande (um caso = 4 pontos de acordo).
 
 ## Estrutura
-- `src/llm_evals/` — `cases` (loader), `scorers` (checks), `providers`, `runner` (execução + gate), `cli`
+- `src/llm_evals/` — `cases` (loader), `scorers` (checks), `providers`, `judge`, `calibracao`, `runner` (execução + gate), `cli`
+- `scripts/calibrar_juiz.py` + `evals/judge_calibracao.jsonl` — calibração do juiz
 - `cases/` — suites de avaliação
 - `evals/baseline.json` — resultado de referência; `evals/fixtures/` — respostas gravadas
 - `tests/` — testes unitários
@@ -49,9 +62,11 @@ Cada caso do relatório traz `input_tokens`, `output_tokens`, `cost_usd`, `laten
 - [x] Esqueleto / setup roda em < 15 min
 - [x] Núcleo funcional (happy path)
 - [x] Provider real (Anthropic) com teto de custo duro, validado de graça (45 testes, 18 mutantes)
+- [x] Check LLM-as-judge (veredito inválido nunca aprova, teto próprio, calibrado contra o piso grátis): 79 testes; mutação 18/18 pegos (2 sobreviveram na 1ª rodada: marca de `skipped_budget` e soma do custo do juiz)
+- [x] Suítes de robustez (12) e abertas com juiz (8), com fixture boa e de regressão: o gate fecha na regressão
 - [ ] Primeira rodada REAL: latência e custo por caso medidos (pede ok de gasto, ~US$ 0,0007 no pior caso)
 - [ ] README com números reais (eval, latência, custo)
-- [ ] Check LLM-as-judge
+- [ ] Calibrar o juiz LLM real contra os 24 rótulos (pede ok de gasto)
 - [ ] Deploy / demo reproduzível
 
 ## Como rodar

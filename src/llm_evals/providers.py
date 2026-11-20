@@ -147,9 +147,10 @@ class AnthropicProvider:
                 with urllib.request.urlopen(self._request(prompt), timeout=self.timeout) as resp:
                     raw = resp.read()
             except urllib.error.HTTPError as e:
+                retry_after = e.headers.get("retry-after")
+                e.close()  # senão o socket da resposta de erro fica aberto até o GC (vazamento de fd)
                 if e.code not in RETRYABLE_STATUS:
                     raise ProviderError(f"HTTP {e.code} da API") from None
-                retry_after = e.headers.get("retry-after")
                 if retry_after and retry_after.replace(".", "", 1).isdigit():
                     wait = min(float(retry_after), 8.0)
                 err = f"HTTP {e.code} da API"

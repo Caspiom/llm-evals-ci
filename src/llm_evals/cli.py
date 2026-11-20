@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from .cases import load_cases
+from .judge import Judge
 from .providers import ProviderError, get_provider
 from .runner import compare, run
 
@@ -23,6 +24,10 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--max-tokens", type=int, default=256, help="saída máxima por caso (entra no pior caso do teto)")
     r.add_argument("--price-in", type=float, help="US$/MTok de entrada (obrigatório p/ modelo fora da tabela)")
     r.add_argument("--price-out", type=float, help="US$/MTok de saída (obrigatório p/ modelo fora da tabela)")
+    r.add_argument("--judge", choices=["fixture", "anthropic"], help="juiz p/ checks 'judge' (fixture: veredito gravado por `<caso>#judge`)")
+    r.add_argument("--judge-fixtures", help="JSON {'<caso>#judge': '<texto com JSON de nota>'} p/ juiz fixture")
+    r.add_argument("--judge-model", help="modelo do juiz anthropic (padrão: o mesmo provider padrão)")
+    r.add_argument("--judge-max-cost-usd", type=float, help="TETO duro do juiz (separado do teto do provider; obrigatório com --judge anthropic)")
     r.add_argument("--baseline", default="evals/baseline.json")
     r.add_argument("--min-pass-rate", type=float, default=0.0)
     r.add_argument("--out", default="results/report.json")
@@ -40,7 +45,23 @@ def main(argv: list[str] | None = None) -> int:
         )
     except (ValueError, ProviderError) as e:
         p.error(str(e))
-    report = run(load_cases(a.cases), provider)
+    judge = None
+    if a.judge == "fixture":
+        if not a.judge_fixtures:
+            p.error("--judge-fixtures é obrigatório com --judge fixture")
+        judge = Judge(get_provider("fixture", fixtures=a.judge_fixtures))
+    elif a.judge == "anthropic":
+        if not a.judge_max_cost_usd:
+            p.error("--judge-max-cost-usd é obrigatório com --judge anthropic (sem teto não roda)")
+        try:
+            judge = Judge(get_provider("anthropic", model=a.judge_model, max_cost_usd=a.judge_max_cost_usd,
+                                       max_tokens=96, price_in=a.price_in, price_out=a.price_out))
+        except (ValueError, ProviderError) as e:
+            p.error(str(e))
+    try:
+        report = run(load_cases(a.cases), provider, judge)
+    except ValueError as e:
+        p.error(str(e))
 
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
